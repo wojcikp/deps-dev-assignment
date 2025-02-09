@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    # stdin_open: true
+    # tty: true
+
+  # db:
+  #   image: nouchka/sqlite3
+  #   volumes:
+  #     - ./data:/data
+  #   command: ["sqlite3", "/data/app.db"]
+
+volumes:
+  data:
