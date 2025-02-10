@@ -2,13 +2,11 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"log"
-	"net/http"
-	"os"
-	"path"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/wojcikp/deps-dev-assignment/backend/internal/app"
+	dependenciesloader "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_loader"
 )
 
 type Response struct {
@@ -16,29 +14,37 @@ type Response struct {
 }
 
 func main() {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	const repositoryApiUrl = "https://api.deps.dev/v3/systems/GO/packages/github.com%2Fcli%2Fcli/versions/v1.14.0:dependencies"
+
+	dependenciesLoader := dependenciesloader.NewDependenciesLoader(repositoryApiUrl)
+
+	app := app.NewApp(dependenciesLoader)
+	app.Run()
+
+	// cwd, err := os.Getwd()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	// p := path.Join(cwd, "data", "production.db")
-	p := path.Join(cwd, "..", "..", "data", "app.db")
-	db, err := sql.Open("sqlite3", p)
+	// // p := path.Join(cwd, "..", "..", "data", "app.db")
+	// db, err := sql.Open("sqlite3", p)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close()
 
-	http.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
-		insertTestData(db)
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
-		w.Header().Set("Content-Type", "application/json")
-		response := Response{Message: "Hello from Go Backend!"}
-		json.NewEncoder(w).Encode(response)
-	})
+	// http.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
+	// 	insertTestData(db)
+	// 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
+	// 	w.Header().Set("Content-Type", "application/json")
+	// 	response := Response{Message: "Hello from Go Backend!"}
+	// 	json.NewEncoder(w).Encode(response)
+	// })
 
-	log.Println("Server started at :3000")
-	log.Fatal(http.ListenAndServe(":3000", nil))
+	// log.Println("Server started at :3000")
+	// log.Fatal(http.ListenAndServe(":3000", nil))
 }
 
 func insertTestData(db *sql.DB) {
