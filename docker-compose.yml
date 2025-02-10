@@ -16,10 +16,5 @@ services:
         VUE_APP_API_URL: "http://localhost:3000"
     ports:
       - "8080:80"
-    volumes:
-      - ./frontend:/app
     depends_on:
       - backend
-
-volumes:
-  data:
