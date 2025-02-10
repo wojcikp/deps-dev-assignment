@@ -1,6 +1,8 @@
 import { createStore } from 'vuex'
 import axios from 'axios'
 
+axios.defaults.baseURL = process.env.VUE_APP_API_URL
+
 export default createStore({
   state: {
     testBackend: null
@@ -15,7 +17,7 @@ export default createStore({
   },
   actions: {
     getTestBackend ({ commit, state }) {
-      return axios.get('http://localhost:3000/api/hello')
+      return axios.get('/api/hello')
         .then(response => response.data)
         .then(data => {
           console.log(data)

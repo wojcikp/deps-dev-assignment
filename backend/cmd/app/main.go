@@ -16,20 +16,21 @@ type Response struct {
 }
 
 func main() {
-	cwd, _ := os.Getwd()
-
-	p := path.Join(cwd, "..", "..", "..", "data", "app.db")
-	log.Println("db path:", p)
-
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// p := path.Join(cwd, "data", "production.db")
+	p := path.Join(cwd, "..", "..", "data", "app.db")
 	db, err := sql.Open("sqlite3", p)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	insertTestData(db)
-
 	http.HandleFunc("/api/hello", func(w http.ResponseWriter, r *http.Request) {
+		insertTestData(db)
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8080")
 		w.Header().Set("Content-Type", "application/json")
 		response := Response{Message: "Hello from Go Backend!"}

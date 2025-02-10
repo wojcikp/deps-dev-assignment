@@ -11,4 +11,5 @@ RUN CGO_ENABLED=1 go build -o deps-dev-assignment-backend ./cmd/app
 FROM alpine:3.18
 WORKDIR /app
 COPY --from=build-stage /app/deps-dev-assignment-backend .
+COPY --from=build-stage /app/data /app/data
 CMD ["./deps-dev-assignment-backend"]
