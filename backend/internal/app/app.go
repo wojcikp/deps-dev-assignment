@@ -17,6 +17,10 @@ func NewApp(
 }
 
 func (app App) Run() {
-	app.dependenciesLoader.FetchDepsDevDependencies()
-	log.Print(app.dependenciesLoader.Dependencies)
+	if err := app.dependenciesLoader.FetchDepsDevDependencies(); err != nil {
+		log.Fatal("failed to fetch deps.dev dependencies")
+	}
+
+	detailedDependencies := app.dependenciesLoader.FetchDetailsForAllDependencies()
+	log.Print(detailedDependencies)
 }
