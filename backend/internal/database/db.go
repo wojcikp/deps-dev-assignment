@@ -80,7 +80,7 @@ func (s *SQLiteDB) CreateTables() error {
 	return nil
 }
 
-func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.DependencyDetails) error {
+func (s *SQLiteDB) LoadDependencies(dependenciesDetails []dependenciesloader.DependencyDetails) error {
 
 	tx, err := s.db.Begin()
 	if err != nil {
@@ -88,8 +88,8 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 	}
 	defer tx.Rollback()
 
-	for _, detail := range dependencyDetails {
-		_, err := tx.Exec(`INSERT INTO "ProjectKey" (id) VALUES (?) ON CONFLICT(id) DO NOTHING`, detail.ProjectKey.ID)
+	for _, details := range dependenciesDetails {
+		_, err := tx.Exec(`INSERT INTO "ProjectKey" (id) VALUES (?) ON CONFLICT(id) DO NOTHING`, details.ProjectKey.ID)
 		if err != nil {
 			return fmt.Errorf("failed to insert into ProjectKey: %w", err)
 		}
@@ -97,12 +97,13 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 		scorecardResult, err := tx.Exec(`
 			INSERT INTO "Scorecard" (date, repositoryName, repositoryCommit, scorecardVersion, scorecardCommit, overallScore, metadata) 
 			VALUES (?, ?, ?, ?, ?, ?, ?)`,
-			detail.Scorecard.Date,
-			detail.Scorecard.Repository.Name,
-			detail.Scorecard.Repository.Commit,
-			detail.Scorecard.Scorecard.Version, detail.Scorecard.Scorecard.Commit,
-			detail.Scorecard.OverallScore,
-			fmt.Sprintf("%v", detail.Scorecard.Metadata),
+			details.Scorecard.Date,
+			details.Scorecard.Repository.Name,
+			details.Scorecard.Repository.Commit,
+			details.Scorecard.Scorecard.Version,
+			details.Scorecard.Scorecard.Commit,
+			details.Scorecard.OverallScore,
+			fmt.Sprintf("%v", details.Scorecard.Metadata),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to insert into Scorecard: %w", err)
@@ -113,7 +114,7 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 			return fmt.Errorf("failed to get last insert id for Scorecard: %w", err)
 		}
 
-		for _, check := range detail.Scorecard.Checks {
+		for _, check := range details.Scorecard.Checks {
 			docResult, err := tx.Exec(`INSERT INTO "Documentation" (shortDescription, url) VALUES (?, ?)`,
 				check.Documentation.ShortDescription, check.Documentation.URL)
 			if err != nil {
@@ -142,13 +143,13 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 		_, err = tx.Exec(`
 		INSERT INTO "DependencyDetails" (projectKeyId, openIssuesCount, starsCount, forksCount, license, description, homepage, scorecardId) 
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			detail.ProjectKey.ID,
-			detail.OpenIssuesCount,
-			detail.StarsCount,
-			detail.ForksCount,
-			detail.License,
-			detail.Description,
-			detail.Homepage,
+			details.ProjectKey.ID,
+			details.OpenIssuesCount,
+			details.StarsCount,
+			details.ForksCount,
+			details.License,
+			details.Description,
+			details.Homepage,
 			scorecardId)
 		if err != nil {
 			return fmt.Errorf("failed to insert into DependencyDetails: %v", err)
