@@ -3,9 +3,12 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
+	"path"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/wojcikp/deps-dev-assignment/backend/internal/app"
+	"github.com/wojcikp/deps-dev-assignment/backend/internal/database"
 	dependenciesloader "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_loader"
 )
 
@@ -17,9 +20,20 @@ func main() {
 
 	const repositoryApiUrl = "https://api.deps.dev/v3/systems/GO/packages/github.com%2Fcli%2Fcli/versions/v1.14.0:dependencies"
 
-	dependenciesLoader := dependenciesloader.NewDependenciesLoader(repositoryApiUrl)
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// p := path.Join(cwd, "data", "production.db")
+	p := path.Join(cwd, "..", "..", "data", "app.db")
 
-	app := app.NewApp(dependenciesLoader)
+	dependenciesLoader := dependenciesloader.NewDependenciesLoader(repositoryApiUrl)
+	db, err := database.NewSQLiteDB(p)
+	if err != nil {
+		log.Fatal("failed to establish database connection, exiting...")
+	}
+
+	app := app.NewApp(dependenciesLoader, db)
 	app.Run()
 
 	// cwd, err := os.Getwd()
