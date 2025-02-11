@@ -127,8 +127,13 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 
 			_, err = tx.Exec(`
                 INSERT INTO "Check" (name, documentationId, score, reason, scorecardId) 
-                VALUES (?, ?, ?, ?, ?)
-            `, check.Name, docId, check.Score, check.Reason, scorecardId)
+                VALUES (?, ?, ?, ?, ?)`,
+				check.Name,
+				docId,
+				check.Score,
+				check.Reason,
+				scorecardId,
+			)
 			if err != nil {
 				return fmt.Errorf("failed to insert into Check: %v", err)
 			}
