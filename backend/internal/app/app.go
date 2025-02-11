@@ -30,10 +30,6 @@ func (app App) Run() {
 
 	detailedDependencies := app.dependenciesLoader.FetchDetailsForAllDependencies()
 
-	for _, d := range detailedDependencies {
-		log.Print(d.Scorecard.Date)
-	}
-
 	if err := app.db.LoadDependencies(detailedDependencies); err != nil {
 		log.Fatalf("failed to load detailed dependencies into db due to an error: %v \n exiting...", err)
 	}
