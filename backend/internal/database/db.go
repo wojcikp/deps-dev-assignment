@@ -91,7 +91,7 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 	for _, detail := range dependencyDetails {
 		_, err := tx.Exec(`INSERT INTO "ProjectKey" (id) VALUES (?) ON CONFLICT(id) DO NOTHING`, detail.ProjectKey.ID)
 		if err != nil {
-			return fmt.Errorf("failed to insert into ProjectKey: %v", err)
+			return fmt.Errorf("failed to insert into ProjectKey: %w", err)
 		}
 
 		scorecardResult, err := tx.Exec(`
@@ -105,24 +105,24 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 			fmt.Sprintf("%v", detail.Scorecard.Metadata),
 		)
 		if err != nil {
-			return fmt.Errorf("failed to insert into Scorecard: %v", err)
+			return fmt.Errorf("failed to insert into Scorecard: %w", err)
 		}
 
 		scorecardId, err := scorecardResult.LastInsertId()
 		if err != nil {
-			return fmt.Errorf("failed to get last insert id for Scorecard: %v", err)
+			return fmt.Errorf("failed to get last insert id for Scorecard: %w", err)
 		}
 
 		for _, check := range detail.Scorecard.Checks {
 			docResult, err := tx.Exec(`INSERT INTO "Documentation" (shortDescription, url) VALUES (?, ?)`,
 				check.Documentation.ShortDescription, check.Documentation.URL)
 			if err != nil {
-				return fmt.Errorf("failed to insert into Documentation: %v", err)
+				return fmt.Errorf("failed to insert into Documentation: %w", err)
 			}
 
 			docId, err := docResult.LastInsertId()
 			if err != nil {
-				return fmt.Errorf("failed to get last insert id for Documentation: %v", err)
+				return fmt.Errorf("failed to get last insert id for Documentation: %w", err)
 			}
 
 			_, err = tx.Exec(`
@@ -135,7 +135,7 @@ func (s *SQLiteDB) LoadDependencies(dependencyDetails []dependenciesloader.Depen
 				scorecardId,
 			)
 			if err != nil {
-				return fmt.Errorf("failed to insert into Check: %v", err)
+				return fmt.Errorf("failed to insert into Check: %w", err)
 			}
 		}
 
