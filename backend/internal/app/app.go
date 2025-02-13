@@ -1,25 +1,24 @@
 package app
 
 import (
-	"log"
-
-	"github.com/wojcikp/deps-dev-assignment/backend/internal/database"
+	"github.com/wojcikp/deps-dev-assignment/backend/internal/api"
 	dependenciesloader "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_loader"
 )
 
 type App struct {
 	dependenciesLoader *dependenciesloader.Loader
-	db                 *database.SQLiteDB
+	api                *api.Api
 }
 
 func NewApp(
 	dependenciesLoader *dependenciesloader.Loader,
-	db *database.SQLiteDB,
+	api *api.Api,
 ) *App {
-	return &App{dependenciesLoader, db}
+	return &App{dependenciesLoader, api}
 }
 
 func (app App) Run() {
+	app.api.Run()
 	// if err := app.db.CreateTables(); err != nil {
 	// 	log.Fatalf("failed to create db tables due to an error: %v \n exiting...", err)
 	// }
@@ -47,12 +46,12 @@ func (app App) Run() {
 
 	// app.db.DeleteDependencyWithDetails("github.com/alecaivazis/survey")
 
-	byscore, err := app.db.GetDependenciesByOverallScore(5)
-	if err != nil {
-		log.Print("ERROR: ", byscore)
-	}
-	for _, d := range byscore {
-		log.Print(d)
-		log.Print("---------------")
-	}
+	// byscore, err := app.db.GetDependenciesByOverallScore(5)
+	// if err != nil {
+	// 	log.Print("ERROR: ", byscore)
+	// }
+	// for _, d := range byscore {
+	// 	log.Print(d)
+	// 	log.Print("---------------")
+	// }
 }

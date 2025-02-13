@@ -7,6 +7,7 @@ import (
 	"path"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/wojcikp/deps-dev-assignment/backend/internal/api"
 	"github.com/wojcikp/deps-dev-assignment/backend/internal/app"
 	"github.com/wojcikp/deps-dev-assignment/backend/internal/database"
 	dependenciesloader "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_loader"
@@ -33,7 +34,9 @@ func main() {
 		log.Fatal("failed to establish database connection, exiting...")
 	}
 
-	app := app.NewApp(dependenciesLoader, db)
+	api := api.NewApi(db)
+
+	app := app.NewApp(dependenciesLoader, api)
 	app.Run()
 
 	// cwd, err := os.Getwd()
