@@ -5,10 +5,10 @@ axios.defaults.baseURL = process.env.VUE_APP_API_URL
 
 export default createStore({
   state: {
-    allDependencies: [],
+    allDependencies: []
   },
   getters: {
-    getAllDependencies: state => { return state.allDependencies },
+    getAllDependencies: state => { return state.allDependencies }
   },
   mutations: {
     setAllDependencies (state, payload) {
