@@ -72,6 +72,12 @@ func (s *SQLiteDB) CreateTables() error {
 			FOREIGN KEY (projectKeyId) REFERENCES "ProjectKey"(id),
 			FOREIGN KEY (scorecardId) REFERENCES "Scorecard"(id)
 		);`,
+
+		`CREATE TABLE IF NOT EXISTS "VersionKeys" (
+			name TEXT PRIMARY KEY,
+			system TEXT,
+			version TEXT
+		);`,
 	}
 
 	for _, stmt := range tableStatements {
@@ -85,7 +91,59 @@ func (s *SQLiteDB) CreateTables() error {
 	return nil
 }
 
-func (s *SQLiteDB) LoadDependencies(dependenciesDetails []dependenciesloader.DependencyDetails) error {
+func (s *SQLiteDB) LoadDependencies(nodes []dependenciesloader.Node) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	for _, node := range nodes {
+		_, err := tx.Exec(`INSERT INTO "VersionKeys" (name, system, version) VALUES (?, ?, ?) ON CONFLICT(name) DO NOTHING`,
+			node.VersionKey.Name,
+			node.VersionKey.System,
+			node.VersionKey.Version,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert into VersionKeys: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (s *SQLiteDB) GetVersionKeys() ([]dependenciesloader.VersionKey, error) {
+	query := `SELECT name, system, version FROM VersionKeys`
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query dependencies: %w", err)
+	}
+
+	var versionKeys []dependenciesloader.VersionKey
+	defer rows.Close()
+
+	for rows.Next() {
+		var versionKey dependenciesloader.VersionKey
+		err := rows.Scan(
+			&versionKey.Name,
+			&versionKey.System,
+			&versionKey.Version,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan DependencyDetails: %w", err)
+		}
+		versionKeys = append(versionKeys, versionKey)
+	}
+
+	return versionKeys, nil
+}
+
+func (s *SQLiteDB) LoadDetailedDependencies(dependenciesDetails []dependenciesloader.DependencyDetails) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
@@ -242,6 +300,31 @@ func (s *SQLiteDB) AddNewDependencyDetails(details dependenciesloader.Dependency
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (s *SQLiteDB) UpdateVersionKeys(name, version string) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	_, err = tx.Exec(`
+		UPDATE "VersionKeys" 
+		SET version = ?
+		WHERE name = ?
+	`, version, name)
+	if err != nil {
+		return fmt.Errorf("failed to update DependencyDetails: %w", err)
 	}
 
 	return nil
@@ -415,6 +498,35 @@ func (s *SQLiteDB) GetDependencyDetailsByID(projectKeyID string) (*dependenciesl
 	}
 
 	return &detail, nil
+}
+
+func (s *SQLiteDB) GetAllDependencies() ([]dependenciesloader.DependencyDetails, error) {
+	query := `SELECT id FROM ProjectKey`
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query dependencies: %w", err)
+	}
+
+	var dependencies []dependenciesloader.DependencyDetails
+	defer rows.Close()
+
+	for rows.Next() {
+		var projectKeyId string
+		err := rows.Scan(
+			&projectKeyId,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan DependencyDetails: %w", err)
+		}
+		dependency, err := s.GetDependencyDetailsByID(projectKeyId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan GetDependencyDetailsByID: %w", err)
+		}
+		dependencies = append(dependencies, *dependency)
+	}
+
+	return dependencies, nil
 }
 
 func (s *SQLiteDB) GetDependenciesByOverallScore(dependencyScore float64) ([]dependenciesloader.DependencyDetails, error) {

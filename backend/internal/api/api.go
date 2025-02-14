@@ -10,14 +10,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/wojcikp/deps-dev-assignment/backend/internal/database"
 	dependenciesloader "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_loader"
+	dependenciesupdater "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_updater"
 )
 
 type Api struct {
-	db *database.SQLiteDB
+	db      *database.SQLiteDB
+	updater *dependenciesupdater.Updater
 }
 
-func NewApi(db *database.SQLiteDB) *Api {
-	return &Api{db}
+func NewApi(db *database.SQLiteDB, updater *dependenciesupdater.Updater) *Api {
+	return &Api{db, updater}
 }
 
 func (a *Api) addDependency(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +82,7 @@ func (a *Api) getDependencyByScore(w http.ResponseWriter, r *http.Request) {
 	scoreParam := mux.Vars(r)["score"]
 	score, err := strconv.ParseFloat(scoreParam, 64)
 	if err != nil {
-		http.Error(w, "Invalid score", http.StatusBadRequest)
+		http.Error(w, "Invalid score", http.StatusInternalServerError)
 		return
 	}
 	results, err := a.db.GetDependenciesByOverallScore(score)
@@ -91,25 +93,27 @@ func (a *Api) getDependencyByScore(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+func (a *Api) getAllDependencies(w http.ResponseWriter, r *http.Request) {
+	defer log.Print("get all Dependencies")
+	results, err := a.db.GetAllDependencies()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(results)
+}
+
+func (a *Api) updateAllDependencies(w http.ResponseWriter, r *http.Request) {
+	defer log.Print("updating dependencies")
+	updatedDependencies, err := a.updater.UpdateDependencies()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(updatedDependencies)
+}
+
 func (a *Api) Run() {
-	// a.db.CreateTables()
-
-	// if err := a.db.CreateTables(); err != nil {
-	// 	log.Fatalf("failed to create db tables due to an error: %v \n exiting...", err)
-	// }
-
-	// loader := dependenciesloader.NewDependenciesLoader("https://api.deps.dev/v3/systems/GO/packages/github.com%2Fcli%2Fcli/versions/v1.14.0:dependencies")
-
-	// if err := loader.FetchDepsDevDependencies(); err != nil {
-	// 	log.Fatalf("failed to fetch deps.dev dependencies due to an error: %v \n exiting...", err)
-	// }
-
-	// detailedDependencies := loader.FetchDetailsForAllDependencies()
-
-	// if err := a.db.LoadDependencies(detailedDependencies); err != nil {
-	// 	log.Fatalf("failed to load detailed dependencies into db due to an error: %v \n exiting...", err)
-	// }
-
 	r := mux.NewRouter()
 	h := handlers.CORS(
 		handlers.AllowedOrigins([]string{"http://localhost:8080"}),
@@ -117,11 +121,13 @@ func (a *Api) Run() {
 		handlers.AllowedHeaders([]string{"Content-Type", "application/json"}),
 	)(r)
 
+	r.HandleFunc("/dependency", a.getDependencyByID).Methods("GET")
+	r.HandleFunc("/dependency/score/{score}", a.getDependencyByScore).Methods("GET")
+	r.HandleFunc("/dependency/all", a.getAllDependencies).Methods("GET")
+	r.HandleFunc("/dependency/update", a.updateAllDependencies).Methods("GET")
 	r.HandleFunc("/dependency", a.addDependency).Methods("POST")
 	r.HandleFunc("/dependency", a.updateDependency).Methods("PUT")
-	r.HandleFunc("/dependency", a.getDependencyByID).Methods("GET")
 	r.HandleFunc("/dependency", a.deleteDependency).Methods("DELETE")
-	r.HandleFunc("/dependency/score/{score}", a.getDependencyByScore).Methods("GET")
 
 	http.ListenAndServe(":3000", h)
 }
