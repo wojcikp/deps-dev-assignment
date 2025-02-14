@@ -608,14 +608,6 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM Documentation
-        WHERE id IN (SELECT documentationId FROM "Check" WHERE scorecardId = ?)
-    `, scorecardID)
-	if err != nil {
-		return fmt.Errorf("failed to delete Documentation: %w", err)
-	}
-
-	_, err = tx.Exec(`
         DELETE FROM "Check"
         WHERE scorecardId = ?
     `, scorecardID)
@@ -624,7 +616,19 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM Scorecard
+        DELETE FROM "Documentation"
+        WHERE id IN (
+            SELECT DISTINCT documentationId 
+            FROM "Check" 
+            WHERE scorecardId = ?
+        )
+    `, scorecardID)
+	if err != nil {
+		return fmt.Errorf("failed to delete Documentation: %w", err)
+	}
+
+	_, err = tx.Exec(`
+        DELETE FROM "Scorecard"
         WHERE id = ?
     `, scorecardID)
 	if err != nil {
@@ -632,7 +636,7 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM DependencyDetails
+        DELETE FROM "DependencyDetails"
         WHERE id = ?
     `, dependencyDetailsID)
 	if err != nil {
@@ -640,7 +644,7 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM ProjectKey
+        DELETE FROM "ProjectKey"
         WHERE id = ?
     `, projectKeyID)
 	if err != nil {
