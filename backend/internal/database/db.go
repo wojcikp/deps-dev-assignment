@@ -378,32 +378,41 @@ func (s *SQLiteDB) UpdateDependencyDetails(newDetails dependenciesloader.Depende
 	}
 
 	_, err = tx.Exec(`
-			DELETE FROM "Documentation"
-			WHERE id IN (
-				SELECT documentationId 
-				FROM "Check"
-				WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
-			)
-		`, projectKeyID)
-	if err != nil {
-		return fmt.Errorf("failed to delete Documentation for projectKeyID %s: %w", projectKeyID, err)
-	}
-
-	_, err = tx.Exec(`
-			DELETE FROM "Check"
-			WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
-		`, projectKeyID)
+		DELETE FROM "Check"
+		WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
+	`, projectKeyID)
 	if err != nil {
 		return fmt.Errorf("failed to delete Check for projectKeyID %s: %w", projectKeyID, err)
 	}
 
+	_, err = tx.Exec(`
+		DELETE FROM "Documentation"
+		WHERE id IN (
+			SELECT documentationId 
+			FROM "Check"
+			WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
+		)
+	`, projectKeyID)
+	if err != nil {
+		return fmt.Errorf("failed to delete Documentation for projectKeyID %s: %w", projectKeyID, err)
+	}
+
 	for _, check := range newDetails.Scorecard.Checks {
 		_, err := tx.Exec(`
-			INSERT OR REPLACE INTO "Documentation" (shortDescription, url)
+			INSERT OR IGNORE INTO "Documentation" (shortDescription, url)
 			VALUES (?, ?)
 		`, check.Documentation.ShortDescription, check.Documentation.URL)
 		if err != nil {
-			return fmt.Errorf("failed to insert or update Documentation for check %s: %w", check.Name, err)
+			return fmt.Errorf("failed to insert Documentation for check %s: %w", check.Name, err)
+		}
+
+		_, err = tx.Exec(`
+			UPDATE "Documentation"
+			SET shortDescription = ?, url = ?
+			WHERE shortDescription = ? AND url = ?
+		`, check.Documentation.ShortDescription, check.Documentation.URL, check.Documentation.ShortDescription, check.Documentation.URL)
+		if err != nil {
+			return fmt.Errorf("failed to update Documentation for check %s: %w", check.Name, err)
 		}
 
 		var documentationID int
@@ -416,11 +425,20 @@ func (s *SQLiteDB) UpdateDependencyDetails(newDetails dependenciesloader.Depende
 		}
 
 		_, err = tx.Exec(`
-			INSERT OR REPLACE INTO "Check" (name, score, reason, documentationId, scorecardId)
+			INSERT OR IGNORE INTO "Check" (name, score, reason, documentationId, scorecardId)
 			VALUES (?, ?, ?, ?, ?)
 		`, check.Name, check.Score, check.Reason, documentationID, scorecardID)
 		if err != nil {
-			return fmt.Errorf("failed to insert or update Check for %s: %w", check.Name, err)
+			return fmt.Errorf("failed to insert Check for %s: %w", check.Name, err)
+		}
+
+		_, err = tx.Exec(`
+			UPDATE "Check"
+			SET score = ?, reason = ?, documentationId = ?
+			WHERE name = ? AND scorecardId = ?
+		`, check.Score, check.Reason, documentationID, check.Name, scorecardID)
+		if err != nil {
+			return fmt.Errorf("failed to update Check for %s: %w", check.Name, err)
 		}
 	}
 
