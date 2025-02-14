@@ -29,7 +29,14 @@
           </v-col>
         </v-row>
         <v-row justify="center">
-          <v-col cols="3"><v-btn @click="this.updateDependenciesAction">Update dependencies</v-btn></v-col>
+          <v-col cols="3"><v-btn variant="outlined" @click="this.updateDependencies()">Update dependencies</v-btn></v-col>
+        </v-row>
+        <v-row v-if="this.showUpdatedDependencies">
+          <v-col class="ml-6">
+            Updated dependencies:
+            <span v-for="(dependency, i) in this.getUpdatedDependencies" :key="i">{{ dependency }}, </span>
+            <br><v-btn class="mt-4" variant="outlined dense" @click="this.dismissUpdateInfo()">Dismiss</v-btn>
+          </v-col>
         </v-row>
       </v-card-text>
 
@@ -42,10 +49,12 @@
             </tr>
           </thead>
           <tbody>
+            <!-- eslint-disable -->
             <template
               v-for="(dependency, index) in filteredDependencies"
               :key="index"
             >
+            <!-- eslint-enable -->
               <tr @click="toggleExpand(index)" class="clickable-row">
                 <td>
                   <v-icon class="pr-4" :icon="toggleIcon(index)" />
@@ -99,7 +108,7 @@
 </template>
 
 <script>
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapMutations } from 'vuex'
 
 export default {
   name: 'DependenciesList',
@@ -108,12 +117,13 @@ export default {
     return {
       searchQuery: '',
       minScore: 0,
-      expandedDependencies: []
+      expandedDependencies: [],
+      showUpdatedDependencies: false
     }
   },
 
   computed: {
-    ...mapGetters(['getAllDependencies']),
+    ...mapGetters(['getAllDependencies', 'getUpdatedDependencies']),
 
     dependencies () {
       return this.getAllDependencies || []
@@ -129,7 +139,8 @@ export default {
   },
 
   methods: {
-    ...mapActions(['getAllDependenciesAction', 'updateDependenciesAction']),
+    ...mapActions(['getAllDependenciesAction', 'updateDependenciesAction', 'testDeleteBackend']),
+    ...mapMutations(['setUpdatedDependencies']),
 
     getScoreColor (score) {
       if (score >= 8) return 'green'
@@ -157,6 +168,17 @@ export default {
       } else {
         return 'mdi-chevron-right'
       }
+    },
+
+    async updateDependencies () {
+      await this.updateDependenciesAction()
+      this.getAllDependenciesAction()
+      this.showUpdatedDependencies = true
+    },
+
+    dismissUpdateInfo () {
+      this.showUpdatedDependencies = false
+      this.setUpdatedDependencies([])
     }
   }
 }
