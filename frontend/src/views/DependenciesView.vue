@@ -32,9 +32,13 @@
           <v-col cols="3"><v-btn variant="outlined" @click="this.updateDependencies()">Update dependencies</v-btn></v-col>
         </v-row>
         <v-row v-if="this.showUpdatedDependencies">
-          <v-col class="ml-6">
+          <v-col class="ml-6" v-if="this.getUpdatedDependencies.length">
             Updated dependencies:
             <span v-for="(dependency, i) in this.getUpdatedDependencies" :key="i">{{ dependency }}, </span>
+            <br><v-btn class="mt-4" variant="outlined dense" @click="this.dismissUpdateInfo()">Dismiss</v-btn>
+          </v-col>
+          <v-col v-else class="ml-6">
+            No new versions found
             <br><v-btn class="mt-4" variant="outlined dense" @click="this.dismissUpdateInfo()">Dismiss</v-btn>
           </v-col>
         </v-row>
