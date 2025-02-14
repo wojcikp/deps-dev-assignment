@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,7 +23,6 @@ func NewApi(db *database.SQLiteDB, updater *dependenciesupdater.Updater) *Api {
 }
 
 func (a *Api) addDependency(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("added new Dependency")
 	var dependency dependenciesloader.DependencyDetails
 	if err := json.NewDecoder(r.Body).Decode(&dependency); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -38,7 +37,6 @@ func (a *Api) addDependency(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Api) updateDependency(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("updated Dependency")
 	var dependency dependenciesloader.DependencyDetails
 	if err := json.NewDecoder(r.Body).Decode(&dependency); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -49,13 +47,12 @@ func (a *Api) updateDependency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(dependency)
+	res := fmt.Sprintf("updated with details dependency: %s", dependency.ProjectKey.ID)
+	json.NewEncoder(w).Encode(res)
 }
 
 func (a *Api) getDependencyByID(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("get Dependency By ID")
 	id := r.URL.Query().Get("id")
-	log.Print(id)
 	dependency, err := a.db.GetDependencyDetailsByID(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -66,19 +63,18 @@ func (a *Api) getDependencyByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Api) deleteDependency(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("deleted Dependency")
 	id := r.URL.Query().Get("id")
-	log.Print(id)
 	err := a.db.DeleteDependencyWithDetails(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	res := fmt.Sprintf("removed with details dependency: %s", id)
+	json.NewEncoder(w).Encode(res)
 }
 
 func (a *Api) getDependencyByScore(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("get Dependency By Score")
 	scoreParam := mux.Vars(r)["score"]
 	score, err := strconv.ParseFloat(scoreParam, 64)
 	if err != nil {
@@ -94,7 +90,6 @@ func (a *Api) getDependencyByScore(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Api) getAllDependencies(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("get all Dependencies")
 	results, err := a.db.GetAllDependencies()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -104,7 +99,6 @@ func (a *Api) getAllDependencies(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *Api) updateAllDependencies(w http.ResponseWriter, r *http.Request) {
-	defer log.Print("updating dependencies")
 	updatedDependencies, err := a.updater.UpdateDependencies()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
