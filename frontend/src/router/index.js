@@ -1,16 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import MainView from '../views/MainView.vue'
+// import MainView from '../views/MainView.vue'
 import DependenciesView from '../views/DependenciesView.vue'
 import ChartView from '../views/ChartView.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'main-view',
-    component: MainView
-  },
-  {
-    path: '/dependencies',
     name: 'dependencies-view',
     component: DependenciesView
   },

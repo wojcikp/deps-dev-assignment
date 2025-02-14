@@ -72,6 +72,12 @@ func (s *SQLiteDB) CreateTables() error {
 			FOREIGN KEY (projectKeyId) REFERENCES "ProjectKey"(id),
 			FOREIGN KEY (scorecardId) REFERENCES "Scorecard"(id)
 		);`,
+
+		`CREATE TABLE IF NOT EXISTS "VersionKeys" (
+			name TEXT PRIMARY KEY,
+			system TEXT,
+			version TEXT
+		);`,
 	}
 
 	for _, stmt := range tableStatements {
@@ -85,7 +91,59 @@ func (s *SQLiteDB) CreateTables() error {
 	return nil
 }
 
-func (s *SQLiteDB) LoadDependencies(dependenciesDetails []dependenciesloader.DependencyDetails) error {
+func (s *SQLiteDB) LoadDependencies(nodes []dependenciesloader.Node) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	for _, node := range nodes {
+		_, err := tx.Exec(`INSERT INTO "VersionKeys" (name, system, version) VALUES (?, ?, ?) ON CONFLICT(name) DO NOTHING`,
+			node.VersionKey.Name,
+			node.VersionKey.System,
+			node.VersionKey.Version,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to insert into VersionKeys: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (s *SQLiteDB) GetVersionKeys() ([]dependenciesloader.VersionKey, error) {
+	query := `SELECT name, system, version FROM VersionKeys`
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query dependencies: %w", err)
+	}
+
+	var versionKeys []dependenciesloader.VersionKey
+	defer rows.Close()
+
+	for rows.Next() {
+		var versionKey dependenciesloader.VersionKey
+		err := rows.Scan(
+			&versionKey.Name,
+			&versionKey.System,
+			&versionKey.Version,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan DependencyDetails: %w", err)
+		}
+		versionKeys = append(versionKeys, versionKey)
+	}
+
+	return versionKeys, nil
+}
+
+func (s *SQLiteDB) LoadDetailedDependencies(dependenciesDetails []dependenciesloader.DependencyDetails) error {
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
@@ -247,6 +305,31 @@ func (s *SQLiteDB) AddNewDependencyDetails(details dependenciesloader.Dependency
 	return nil
 }
 
+func (s *SQLiteDB) UpdateVersionKeys(name, version string) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	_, err = tx.Exec(`
+		UPDATE "VersionKeys" 
+		SET version = ?
+		WHERE name = ?
+	`, version, name)
+	if err != nil {
+		return fmt.Errorf("failed to update DependencyDetails: %w", err)
+	}
+
+	return nil
+}
+
 func (s *SQLiteDB) UpdateDependencyDetails(newDetails dependenciesloader.DependencyDetails) error {
 	projectKeyID := newDetails.ProjectKey.ID
 
@@ -295,32 +378,41 @@ func (s *SQLiteDB) UpdateDependencyDetails(newDetails dependenciesloader.Depende
 	}
 
 	_, err = tx.Exec(`
-			DELETE FROM "Documentation"
-			WHERE id IN (
-				SELECT documentationId 
-				FROM "Check"
-				WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
-			)
-		`, projectKeyID)
-	if err != nil {
-		return fmt.Errorf("failed to delete Documentation for projectKeyID %s: %w", projectKeyID, err)
-	}
-
-	_, err = tx.Exec(`
-			DELETE FROM "Check"
-			WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
-		`, projectKeyID)
+		DELETE FROM "Check"
+		WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
+	`, projectKeyID)
 	if err != nil {
 		return fmt.Errorf("failed to delete Check for projectKeyID %s: %w", projectKeyID, err)
 	}
 
+	_, err = tx.Exec(`
+		DELETE FROM "Documentation"
+		WHERE id IN (
+			SELECT documentationId 
+			FROM "Check"
+			WHERE scorecardId = (SELECT scorecardId FROM DependencyDetails WHERE projectKeyId = ?)
+		)
+	`, projectKeyID)
+	if err != nil {
+		return fmt.Errorf("failed to delete Documentation for projectKeyID %s: %w", projectKeyID, err)
+	}
+
 	for _, check := range newDetails.Scorecard.Checks {
 		_, err := tx.Exec(`
-			INSERT OR REPLACE INTO "Documentation" (shortDescription, url)
+			INSERT OR IGNORE INTO "Documentation" (shortDescription, url)
 			VALUES (?, ?)
 		`, check.Documentation.ShortDescription, check.Documentation.URL)
 		if err != nil {
-			return fmt.Errorf("failed to insert or update Documentation for check %s: %w", check.Name, err)
+			return fmt.Errorf("failed to insert Documentation for check %s: %w", check.Name, err)
+		}
+
+		_, err = tx.Exec(`
+			UPDATE "Documentation"
+			SET shortDescription = ?, url = ?
+			WHERE shortDescription = ? AND url = ?
+		`, check.Documentation.ShortDescription, check.Documentation.URL, check.Documentation.ShortDescription, check.Documentation.URL)
+		if err != nil {
+			return fmt.Errorf("failed to update Documentation for check %s: %w", check.Name, err)
 		}
 
 		var documentationID int
@@ -333,11 +425,20 @@ func (s *SQLiteDB) UpdateDependencyDetails(newDetails dependenciesloader.Depende
 		}
 
 		_, err = tx.Exec(`
-			INSERT OR REPLACE INTO "Check" (name, score, reason, documentationId, scorecardId)
+			INSERT OR IGNORE INTO "Check" (name, score, reason, documentationId, scorecardId)
 			VALUES (?, ?, ?, ?, ?)
 		`, check.Name, check.Score, check.Reason, documentationID, scorecardID)
 		if err != nil {
-			return fmt.Errorf("failed to insert or update Check for %s: %w", check.Name, err)
+			return fmt.Errorf("failed to insert Check for %s: %w", check.Name, err)
+		}
+
+		_, err = tx.Exec(`
+			UPDATE "Check"
+			SET score = ?, reason = ?, documentationId = ?
+			WHERE name = ? AND scorecardId = ?
+		`, check.Score, check.Reason, documentationID, check.Name, scorecardID)
+		if err != nil {
+			return fmt.Errorf("failed to update Check for %s: %w", check.Name, err)
 		}
 	}
 
@@ -417,6 +518,35 @@ func (s *SQLiteDB) GetDependencyDetailsByID(projectKeyID string) (*dependenciesl
 	return &detail, nil
 }
 
+func (s *SQLiteDB) GetAllDependencies() ([]dependenciesloader.DependencyDetails, error) {
+	query := `SELECT id FROM ProjectKey`
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query dependencies: %w", err)
+	}
+
+	var dependencies []dependenciesloader.DependencyDetails
+	defer rows.Close()
+
+	for rows.Next() {
+		var projectKeyId string
+		err := rows.Scan(
+			&projectKeyId,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan DependencyDetails: %w", err)
+		}
+		dependency, err := s.GetDependencyDetailsByID(projectKeyId)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan GetDependencyDetailsByID: %w", err)
+		}
+		dependencies = append(dependencies, *dependency)
+	}
+
+	return dependencies, nil
+}
+
 func (s *SQLiteDB) GetDependenciesByOverallScore(dependencyScore float64) ([]dependenciesloader.DependencyDetails, error) {
 	query := `
         SELECT dd.projectKeyId 
@@ -478,14 +608,6 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM Documentation
-        WHERE id IN (SELECT documentationId FROM "Check" WHERE scorecardId = ?)
-    `, scorecardID)
-	if err != nil {
-		return fmt.Errorf("failed to delete Documentation: %w", err)
-	}
-
-	_, err = tx.Exec(`
         DELETE FROM "Check"
         WHERE scorecardId = ?
     `, scorecardID)
@@ -494,7 +616,19 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM Scorecard
+        DELETE FROM "Documentation"
+        WHERE id IN (
+            SELECT DISTINCT documentationId 
+            FROM "Check" 
+            WHERE scorecardId = ?
+        )
+    `, scorecardID)
+	if err != nil {
+		return fmt.Errorf("failed to delete Documentation: %w", err)
+	}
+
+	_, err = tx.Exec(`
+        DELETE FROM "Scorecard"
         WHERE id = ?
     `, scorecardID)
 	if err != nil {
@@ -502,7 +636,7 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM DependencyDetails
+        DELETE FROM "DependencyDetails"
         WHERE id = ?
     `, dependencyDetailsID)
 	if err != nil {
@@ -510,7 +644,7 @@ func (s *SQLiteDB) DeleteDependencyWithDetails(projectKeyID string) error {
 	}
 
 	_, err = tx.Exec(`
-        DELETE FROM ProjectKey
+        DELETE FROM "ProjectKey"
         WHERE id = ?
     `, projectKeyID)
 	if err != nil {

@@ -5,14 +5,19 @@ axios.defaults.baseURL = process.env.VUE_APP_API_URL
 
 export default createStore({
   state: {
-    allDependencies: []
+    allDependencies: [],
+    updatedDependencies: []
   },
   getters: {
-    getAllDependencies: state => { return state.allDependencies }
+    getAllDependencies: state => { return state.allDependencies },
+    getUpdatedDependencies: state => { return state.updatedDependencies }
   },
   mutations: {
     setAllDependencies (state, payload) {
       state.allDependencies = payload
+    },
+    setUpdatedDependencies (state, payload) {
+      state.updatedDependencies = payload
     }
   },
   actions: {
@@ -30,57 +35,7 @@ export default createStore({
       return axios.get('/dependency/update')
         .then(response => response.data)
         .then(data => {
-          commit('setUpdatedDataFromDepsDev', data)
-        })
-        .catch(err => {
-          console.error(err)
-        })
-    },
-    getTestBackend ({ commit, state }, id) {
-      return axios.get(`/dependency?id=${id}`)
-        .then(response => response.data)
-        .then(data => {
-          commit('setFromDepsDev', data)
-        })
-        .catch(err => {
-          console.error(err)
-        })
-    },
-    testDeleteBackend ({ commit, state }, id) {
-      return axios.delete(`/dependency?id=${id}`)
-        .then(response => response.data)
-        .then(data => {
-          // commit('setTestBackend', data)
-        })
-        .catch(err => {
-          console.error(err)
-        })
-    },
-    testUpdateBackend ({ commit, state }, dependencyDetails) {
-      return axios.put('/dependency', dependencyDetails)
-        .then(response => response.data)
-        .then(data => {
-          // commit('setTestBackend', data)
-        })
-        .catch(err => {
-          console.error(err)
-        })
-    },
-    testAddBackend ({ commit, state }, dependencyDetails) {
-      return axios.post('/dependency', dependencyDetails)
-        .then(response => response.data)
-        .then(data => {
-          // commit('setTestBackend', data)
-        })
-        .catch(err => {
-          console.error(err)
-        })
-    },
-    testGetByScoreBackend ({ commit, state }, score) {
-      return axios.get(`/dependency/score/${score}`)
-        .then(response => response.data)
-        .then(data => {
-          commit('setTestBackend', data)
+          commit('setUpdatedDependencies', data)
         })
         .catch(err => {
           console.error(err)

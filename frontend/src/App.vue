@@ -34,7 +34,7 @@ export default {
   data () {
     return {
       menuItems: [
-        { title: 'Dependencies', route: '/dependencies' },
+        { title: 'Dependencies', route: '/' },
         { title: 'Chart', route: '/chart' }
       ]
     }
