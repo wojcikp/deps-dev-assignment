@@ -10,11 +10,11 @@ When the docker build process is ready backend of the app will be available at *
 To see the application interface go to **localhost:8080** address in your web browser.
 
 #### Available endpoints:
-1. "/dependency", Methods("GET"), example: curl -X GET "http://localhost:3000/dependency?id=github.com/briandowns/spinner"
-2. "/dependency/score/{score}", Methods("GET"), example: curl -X GET "http://localhost:3000/dependency/score/4"
-3. "/dependency/all", Methods("GET"), example: curl -X GET "http://localhost:3000/dependency/all"
-4. "/dependency/update", Methods("GET"), example: curl -X GET "http://localhost:3000/dependency/update"
-5. "/dependency", Methods("DELETE"), example: curl -X DELETE "http://localhost:3000/dependency?id=github.com/briandowns/spinner"
+1. "/dependency", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency?id=github.com/briandowns/spinner"`
+2. "/dependency/score/{score}", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency/score/4"`
+3. "/dependency/all", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency/all"`
+4. "/dependency/update", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency/update"`
+5. "/dependency", Methods("DELETE"), example: `curl -X DELETE "http://localhost:3000/dependency?id=github.com/briandowns/spinner"`
 6. "/dependency", Methods("POST"), example: 
 ```
 curl --location 'http://localhost:3000/dependency' \
