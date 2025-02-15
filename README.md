@@ -14,6 +14,7 @@ To see the application interface go to **localhost:8080** address in your web br
 2. "/dependency/score/{score}", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency/score/4"`
 3. "/dependency/all", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency/all"`
 4. "/dependency/update", Methods("GET"), example: `curl -X GET "http://localhost:3000/dependency/update"`
+**NOTE**: the "/dependency/update" endpoint is created to perform a check if new version of packages are available and if so, make the updates in database
 5. "/dependency", Methods("DELETE"), example: `curl -X DELETE "http://localhost:3000/dependency?id=github.com/briandowns/spinner"`
 6. "/dependency", Methods("POST"), example: 
 ```
