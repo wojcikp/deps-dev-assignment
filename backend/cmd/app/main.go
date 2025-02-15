@@ -16,8 +16,6 @@ import (
 const repositoryApiUrl = "https://api.deps.dev/v3/systems/GO/packages/github.com%2Fcli%2Fcli/versions/v1.14.0:dependencies"
 
 func main() {
-	dependenciesLoader := dependenciesloader.NewDependenciesLoader(repositoryApiUrl)
-
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
@@ -29,10 +27,9 @@ func main() {
 		log.Fatal("failed to establish database connection, exiting...")
 	}
 
+	dependenciesLoader := dependenciesloader.NewDependenciesLoader(repositoryApiUrl)
 	dependenciesUpdater := dependenciesupdater.NewDependenciesUpdater(dependenciesLoader, db)
-
 	api := api.NewApi(db, dependenciesUpdater)
-
 	app := app.NewApp(dependenciesLoader, db, api)
 
 	app.Run()

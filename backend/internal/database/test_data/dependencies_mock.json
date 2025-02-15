@@ -1,0 +1,56 @@
+{
+    "nodes": [
+        {
+            "versionKey": {
+                "system": "GO",
+                "name": "github.com/cli/cli",
+                "version": "v1.14.0"
+            },
+            "bundled": false,
+            "relation": "SELF",
+            "errors": []
+        },
+        {
+            "versionKey": {
+                "system": "GO",
+                "name": "github.com/AlecAivazis/survey/v2",
+                "version": "v2.2.14"
+            },
+            "bundled": false,
+            "relation": "DIRECT",
+            "errors": []
+        },
+        {
+            "versionKey": {
+                "system": "GO",
+                "name": "github.com/alecthomas/chroma",
+                "version": "v0.8.2"
+            },
+            "bundled": false,
+            "relation": "INDIRECT",
+            "errors": []
+        },
+        {
+            "versionKey": {
+                "system": "GO",
+                "name": "github.com/aymerick/douceur",
+                "version": "v0.2.0"
+            },
+            "bundled": false,
+            "relation": "INDIRECT",
+            "errors": []
+        },
+        {
+            "versionKey": {
+                "system": "GO",
+                "name": "github.com/briandowns/spinner",
+                "version": "v1.11.1"
+            },
+            "bundled": false,
+            "relation": "DIRECT",
+            "errors": []
+        }
+    ],
+    "edges": [],
+    "error": ""
+}

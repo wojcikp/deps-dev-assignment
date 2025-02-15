@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 
+	_ "github.com/mattn/go-sqlite3"
 	dependenciesloader "github.com/wojcikp/deps-dev-assignment/backend/internal/dependencies_loader"
 )
 
@@ -85,7 +85,6 @@ func (s *SQLiteDB) CreateTables() error {
 		if err != nil {
 			return fmt.Errorf("error executing statement: %s \n error: %w", stmt, err)
 		}
-		log.Printf("executed db statement: %s", stmt)
 	}
 
 	return nil

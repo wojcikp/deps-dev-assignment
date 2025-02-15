@@ -1,0 +1,60 @@
+{
+    "dependencies": [
+        {
+            "projectKey": {
+                "id": "github.com/charmbracelet/glamour"
+            },
+            "openIssuesCount": 87,
+            "starsCount": 2608,
+            "forksCount": 194,
+            "license": "MIT",
+            "description": "Stylesheet-based markdown rendering for your CLI apps 💇🏻‍♀️",
+            "homepage": "",
+            "scorecard": {
+                "date": "2025-02-04T00:00:00Z",
+                "repository": {
+                    "name": "github.com/charmbracelet/glamour",
+                    "commit": "9ba12b6e631bc857f26318fbd9aa78904f058587"
+                },
+                "scorecard": {
+                    "version": "v5.0.0-142-g2adbb887",
+                    "commit": "2adbb8876cfa8d41a9bfce61968550afd646eb31"
+                },
+                "checks": [
+                    {
+                        "name": "Code-Review",
+                        "documentation": {
+                            "shortDescription": "Determines if the project requires human code review before pull requests (aka merge requests) are merged.",
+                            "url": "https://github.com/ossf/scorecard/blob/2adbb8876cfa8d41a9bfce61968550afd646eb31/docs/checks.md#code-review"
+                        },
+                        "score": 4,
+                        "reason": "Found 2/5 approved changesets -- score normalized to 4",
+                        "details": []
+                    },
+                    {
+                        "name": "Dangerous-Workflow",
+                        "documentation": {
+                            "shortDescription": "Determines if the project's GitHub Action workflows avoid dangerous patterns.",
+                            "url": "https://github.com/ossf/scorecard/blob/2adbb8876cfa8d41a9bfce61968550afd646eb31/docs/checks.md#dangerous-workflow"
+                        },
+                        "score": 10,
+                        "reason": "no dangerous workflow patterns detected",
+                        "details": []
+                    },
+                    {
+                        "name": "Maintained",
+                        "documentation": {
+                            "shortDescription": "Determines if the project is \"actively maintained\".",
+                            "url": "https://github.com/ossf/scorecard/blob/2adbb8876cfa8d41a9bfce61968550afd646eb31/docs/checks.md#maintained"
+                        },
+                        "score": 10,
+                        "reason": "12 commit(s) and 2 issue activity found in the last 90 days -- score normalized to 10",
+                        "details": []
+                    }
+                ],
+                "overallScore": 10,
+                "metadata": []
+            }
+        }
+    ]
+}
