@@ -2,7 +2,7 @@
 
 #### Running the app:
 1. Clone this repository to your local machine
-2. Be sure to have docker compose installed on your computer
+2. Make sure to have docker compose installed on your computer
 3. Make sure to have **:3000** and **:8080** ports on your machine **available**
 4. In the main app directory run command "docker-compose up --build"
 
