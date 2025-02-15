@@ -27,7 +27,7 @@ curl --location --request PUT 'http://localhost:3000/dependency' \
 --header 'Content-Type: application/json' \
 --data ''
 ```
-**NOTE**: <In data field provide a valid json structured like response from deps.dev api, for example result of: curl -s 'https://api.deps.dev/v3/projects/github.com%2Fcharmbracelet%2Fglamour'>
+**NOTE**: In data field provide a valid json structured like response from deps.dev api, for example result of: `curl -s 'https://api.deps.dev/v3/projects/github.com%2Fcharmbracelet%2Fglamour'`
 
 #### SQLite database schema:
 ```
