@@ -31,55 +31,55 @@ curl --location --request PUT 'http://localhost:3000/dependency' \
 
 #### SQLite database schema:
 ```
-        `CREATE TABLE IF NOT EXISTS "ProjectKey" (
-			id TEXT PRIMARY KEY
-		);`,
+`CREATE TABLE IF NOT EXISTS "ProjectKey" (
+	id TEXT PRIMARY KEY
+);`,
 
-		`CREATE TABLE IF NOT EXISTS "Documentation" (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			shortDescription TEXT,
-			url TEXT
-		);`,
+`CREATE TABLE IF NOT EXISTS "Documentation" (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	shortDescription TEXT,
+	url TEXT
+);`,
 
-		`CREATE TABLE IF NOT EXISTS "Check" (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			name TEXT,
-			documentationId INTEGER,
-			score INTEGER,
-			reason TEXT,
-			scorecardId INTEGER,
-			FOREIGN KEY (documentationId) REFERENCES "Documentation"(id),
-			FOREIGN KEY (scorecardId) REFERENCES "Scorecard"(id)
-		);`,
+`CREATE TABLE IF NOT EXISTS "Check" (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT,
+	documentationId INTEGER,
+	score INTEGER,
+	reason TEXT,
+	scorecardId INTEGER,
+	FOREIGN KEY (documentationId) REFERENCES "Documentation"(id),
+	FOREIGN KEY (scorecardId) REFERENCES "Scorecard"(id)
+);`,
 
-		`CREATE TABLE IF NOT EXISTS "Scorecard" (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			date TEXT,
-			repositoryName TEXT,
-			repositoryCommit TEXT,
-			scorecardVersion TEXT,
-			scorecardCommit TEXT,
-			overallScore REAL,
-			metadata TEXT
-		);`,
+`CREATE TABLE IF NOT EXISTS "Scorecard" (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	date TEXT,
+	repositoryName TEXT,
+	repositoryCommit TEXT,
+	scorecardVersion TEXT,
+	scorecardCommit TEXT,
+	overallScore REAL,
+	metadata TEXT
+);`,
 
-		`CREATE TABLE IF NOT EXISTS "DependencyDetails" (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			projectKeyId TEXT,
-			openIssuesCount INTEGER,
-			starsCount INTEGER,
-			forksCount INTEGER,
-			license TEXT,
-			description TEXT,
-			homepage TEXT,
-			scorecardId INTEGER,
-			FOREIGN KEY (projectKeyId) REFERENCES "ProjectKey"(id),
-			FOREIGN KEY (scorecardId) REFERENCES "Scorecard"(id)
-		);`,
+`CREATE TABLE IF NOT EXISTS "DependencyDetails" (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	projectKeyId TEXT,
+	openIssuesCount INTEGER,
+	starsCount INTEGER,
+	forksCount INTEGER,
+	license TEXT,
+	description TEXT,
+	homepage TEXT,
+	scorecardId INTEGER,
+	FOREIGN KEY (projectKeyId) REFERENCES "ProjectKey"(id),
+	FOREIGN KEY (scorecardId) REFERENCES "Scorecard"(id)
+);`,
 
-		`CREATE TABLE IF NOT EXISTS "VersionKeys" (
-			name TEXT PRIMARY KEY,
-			system TEXT,
-			version TEXT
-		);`,
+`CREATE TABLE IF NOT EXISTS "VersionKeys" (
+	name TEXT PRIMARY KEY,
+	system TEXT,
+	version TEXT
+);`,
 ```
