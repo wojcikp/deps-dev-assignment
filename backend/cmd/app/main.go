@@ -20,8 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// p := path.Join(cwd, "data", "production.db")
-	p := path.Join(cwd, "..", "..", "data", "app.db")
+	p := path.Join(cwd, "data", "production.db")
 	db, err := database.NewSQLiteDB(p)
 	if err != nil {
 		log.Fatal("failed to establish database connection, exiting...")

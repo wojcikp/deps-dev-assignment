@@ -33,7 +33,8 @@ func (a *Api) addDependency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(dependency)
+	res := fmt.Sprintf("created: %v", dependency)
+	json.NewEncoder(w).Encode(res)
 }
 
 func (a *Api) updateDependency(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +48,7 @@ func (a *Api) updateDependency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	res := fmt.Sprintf("updated with details dependency: %s", dependency.ProjectKey.ID)
+	res := fmt.Sprintf("updated with details dependency: %v", dependency)
 	json.NewEncoder(w).Encode(res)
 }
 
